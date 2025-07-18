@@ -14,6 +14,29 @@
       "program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
       "args": ["--verbose", "-i", "${file}"],
       "runtimeArgs": ["--nolazy"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "调试 dev-playground",
+      "program": "${workspaceFolder}/dev-playground.js",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
+      "runtimeArgs": ["--enable-source-maps", "--require", "ts-node/register"],
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "调试 immer 源码",
+      "program": "${workspaceFolder}/debug-playground.mjs",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
+      "runtimeArgs": ["--enable-source-maps", "--loader", "ts-node/esm"],
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "stopOnEntry": false
     }
   ]
 }

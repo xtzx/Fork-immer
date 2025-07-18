@@ -1,31 +1,31 @@
 // 导入所有必需的类型定义和工具函数
 // 这些导入展现了 immer 的模块化设计，每个模块负责特定功能
 import {
-	IProduceWithPatches,    // 带补丁的 produce 接口类型
-	IProduce,               // 标准 produce 接口类型
-	ImmerState,             // 草稿对象的内部状态结构
-	Drafted,                // 已代理的草稿对象类型
-	isDraftable,            // 判断对象是否可被代理
-	processResult,          // 处理 recipe 函数的返回结果
-	Patch,                  // 补丁对象类型
-	Objectish,              // 类对象类型（对象、数组、Map、Set）
-	DRAFT_STATE,            // 草稿状态的 Symbol 键
-	Draft,                  // 草稿类型定义
-	PatchListener,          // 补丁监听器类型
-	isDraft,                // 判断是否为草稿对象
-	isMap,                  // 判断是否为 Map 类型
-	isSet,                  // 判断是否为 Set 类型
-	createProxyProxy,       // 创建普通对象/数组的代理
-	getPlugin,              // 获取插件实现
-	die,                    // 错误处理函数
-	enterScope,             // 进入新的执行作用域
-	revokeScope,            // 撤销作用域（错误时）
-	leaveScope,             // 正常离开作用域
-	usePatchesInScope,      // 在作用域中使用补丁功能
-	getCurrentScope,        // 获取当前执行作用域
-	NOTHING,                // 表示删除操作的特殊符号
-	freeze,                 // 冻结对象函数
-	current                 // 获取草稿当前状态快照
+	IProduceWithPatches, // 带补丁的 produce 接口类型
+	IProduce, // 标准 produce 接口类型
+	ImmerState, // 草稿对象的内部状态结构
+	Drafted, // 已代理的草稿对象类型
+	isDraftable, // 判断对象是否可被代理
+	processResult, // 处理 recipe 函数的返回结果
+	Patch, // 补丁对象类型
+	Objectish, // 类对象类型（对象、数组、Map、Set）
+	DRAFT_STATE, // 草稿状态的 Symbol 键
+	Draft, // 草稿类型定义
+	PatchListener, // 补丁监听器类型
+	isDraft, // 判断是否为草稿对象
+	isMap, // 判断是否为 Map 类型
+	isSet, // 判断是否为 Set 类型
+	createProxyProxy, // 创建普通对象/数组的代理
+	getPlugin, // 获取插件实现
+	die, // 错误处理函数
+	enterScope, // 进入新的执行作用域
+	revokeScope, // 撤销作用域（错误时）
+	leaveScope, // 正常离开作用域
+	usePatchesInScope, // 在作用域中使用补丁功能
+	getCurrentScope, // 获取当前执行作用域
+	NOTHING, // 表示删除操作的特殊符号
+	freeze, // 冻结对象函数
+	current // 获取草稿当前状态快照
 } from "../internal"
 
 /**
@@ -33,8 +33,8 @@ import {
  * 定义了 Immer 类必须实现的核心方法
  */
 interface ProducersFns {
-	produce: IProduce                    // 标准的 produce 方法
-	produceWithPatches: IProduceWithPatches  // 带补丁信息的 produce 方法
+	produce: IProduce // 标准的 produce 方法
+	produceWithPatches: IProduceWithPatches // 带补丁信息的 produce 方法
 }
 
 /**
@@ -43,7 +43,7 @@ interface ProducersFns {
  * - false: 使用默认拷贝策略
  * - "class_only": 仅对类实例启用严格拷贝
  */
-export type StrictMode = boolean | "class_only";
+export type StrictMode = boolean | "class_only"
 
 /**
  * Immer 核心类 - 不可变数据处理的协调中心
@@ -106,25 +106,27 @@ export class Immer implements ProducersFns {
 	produce: IProduce = (base: any, recipe?: any, patchListener?: any) => {
 		// 🔄 处理柯里化调用：produce(recipe) 或 produce(recipe, defaultBase)
 		if (typeof base === "function" && typeof recipe !== "function") {
-			const defaultBase = recipe  // 第二个参数作为默认基础状态
-			recipe = base              // 第一个参数作为 recipe 函数
+			const defaultBase = recipe // 第二个参数作为默认基础状态
+			recipe = base // 第一个参数作为 recipe 函数
 
 			const self = this
 			// 返回柯里化的生产者函数
 			return function curriedProduce(
 				this: any,
-				base = defaultBase,    // 使用默认基础状态
-				...args: any[]         // 额外参数传递给 recipe
+				base = defaultBase, // 使用默认基础状态
+				...args: any[] // 额外参数传递给 recipe
 			) {
 				// 递归调用标准 produce，并正确绑定 this 上下文
-				return self.produce(base, (draft: Drafted) => recipe.call(this, draft, ...args))
+				return self.produce(base, (draft: Drafted) =>
+					recipe.call(this, draft, ...args)
+				)
 			}
 		}
 
 		// 📋 参数验证
-		if (typeof recipe !== "function") die(6)  // recipe 必须是函数
+		if (typeof recipe !== "function") die(6) // recipe 必须是函数
 		if (patchListener !== undefined && typeof patchListener !== "function")
-			die(7)  // 补丁监听器必须是函数或 undefined
+			die(7) // 补丁监听器必须是函数或 undefined
 
 		let result
 
@@ -139,13 +141,14 @@ export class Immer implements ProducersFns {
 			// 3️⃣ 执行用户 recipe 函数，使用 try-finally 确保清理
 			let hasError = true
 			try {
-				result = recipe(proxy)  // 用户在代理上进行修改
+				result = recipe(proxy) // 用户在代理上进行修改
 				hasError = false
 			} finally {
 				// 📝 清理工作：无论成功失败都要清理作用域
 				// finally 比 catch + rethrow 更好地保留原始堆栈信息
-				if (hasError) revokeScope(scope)  // 错误时撤销所有修改
-				else leaveScope(scope)            // 正常完成时离开作用域
+				if (hasError) revokeScope(scope)
+				// 错误时撤销所有修改
+				else leaveScope(scope) // 正常完成时离开作用域
 			}
 
 			// 4️⃣ 处理补丁功能（如果启用）
@@ -153,23 +156,22 @@ export class Immer implements ProducersFns {
 
 			// 5️⃣ 生成最终结果 - 进行最终化处理
 			return processResult(result, scope)
-
 		} else if (!base || typeof base !== "object") {
 			// 🔄 处理原始值或不可代理对象
 			// 直接调用 recipe，不创建代理
 			result = recipe(base)
 
 			// 处理特殊返回值
-			if (result === undefined) result = base      // undefined -> 保持原值
-			if (result === NOTHING) result = undefined   // NOTHING -> 转为 undefined
+			if (result === undefined) result = base // undefined -> 保持原值
+			if (result === NOTHING) result = undefined // NOTHING -> 转为 undefined
 
 			// 自动冻结（如果启用）
 			if (this.autoFreeze_) freeze(result, true)
 
 			// 生成替换补丁（整个对象被替换）
 			if (patchListener) {
-				const p: Patch[] = []      // 正向补丁
-				const ip: Patch[] = []     // 逆向补丁
+				const p: Patch[] = [] // 正向补丁
+				const ip: Patch[] = [] // 逆向补丁
 				getPlugin("Patches").generateReplacementPatches_(base, result, p, ip)
 				patchListener(p, ip)
 			}
@@ -199,8 +201,8 @@ export class Immer implements ProducersFns {
 		// 📦 使用内部变量收集补丁信息
 		let patches: Patch[], inversePatches: Patch[]
 		const result = this.produce(base, recipe, (p: Patch[], ip: Patch[]) => {
-			patches = p       // 正向补丁：如何从 base 到 result
-			inversePatches = ip   // 逆向补丁：如何从 result 回到 base
+			patches = p // 正向补丁：如何从 base 到 result
+			inversePatches = ip // 逆向补丁：如何从 result 回到 base
 		})
 
 		// 📤 返回完整的补丁信息
@@ -258,8 +260,8 @@ export class Immer implements ProducersFns {
 
 		// 🎯 完成最终化处理
 		const {scope_: scope} = state
-		usePatchesInScope(scope, patchListener)  // 处理补丁
-		return processResult(undefined, scope)   // undefined 表示使用草稿本身
+		usePatchesInScope(scope, patchListener) // 处理补丁
+		return processResult(undefined, scope) // undefined 表示使用草稿本身
 	}
 
 	/**
@@ -318,7 +320,7 @@ export class Immer implements ProducersFns {
 		for (i = patches.length - 1; i >= 0; i--) {
 			const patch = patches[i]
 			if (patch.path.length === 0 && patch.op === "replace") {
-				base = patch.value  // 使用替换值作为新的基础
+				base = patch.value // 使用替换值作为新的基础
 				break
 			}
 		}
@@ -368,14 +370,14 @@ export function createProxy<T extends Objectish>(
 	// 🎯 根据对象类型选择代理策略
 	// 前提：createProxy 应该被 isDraftable 保护，确保对象可以安全代理
 	const draft: Drafted = isMap(value)
-		? getPlugin("MapSet").proxyMap_(value, parent)    // Map 类型的特殊代理
+		? getPlugin("MapSet").proxyMap_(value, parent) // Map 类型的特殊代理
 		: isSet(value)
-		? getPlugin("MapSet").proxySet_(value, parent)    // Set 类型的特殊代理
-		: createProxyProxy(value, parent)                 // 普通对象/数组的代理
+		? getPlugin("MapSet").proxySet_(value, parent) // Set 类型的特殊代理
+		: createProxyProxy(value, parent) // 普通对象/数组的代理
 
 	// 📋 作用域管理：将新创建的草稿注册到当前作用域
 	const scope = parent ? parent.scope_ : getCurrentScope()
-	scope.drafts_.push(draft)  // 用于最终化时的清理和处理
+	scope.drafts_.push(draft) // 用于最终化时的清理和处理
 
 	return draft
 }

@@ -27,10 +27,15 @@
     "coverage": "jest --coverage",
     "coveralls": "jest --coverage && cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage",
     "build": "tsup",
+    "dev": "ts-node dev-playground.js",
+    "dev:debug": "ts-node --inspect-brk debug-playground.js",
+    "debug": "node --loader ts-node/esm debug-playground.mjs",
+    "debug:inspect": "node --inspect-brk --loader ts-node/esm debug-playground.mjs",
     "publish-docs": "cd website && GIT_USER=mweststrate USE_SSH=true yarn docusaurus deploy",
     "start": "cd website && yarn start",
     "test:size": "yarn build && yarn import-size --report . produce enableMapSet enablePatches",
-    "test:sizequick": "yarn build && yarn import-size . produce"
+    "test:sizequick": "yarn build && yarn import-size . produce",
+    "build:debug": "tsup --config tsup.config.debug.ts"
   },
   "husky": {
     "hooks": {
@@ -83,5 +88,8 @@
     "ts-jest": "^29.0.0",
     "tsup": "^6.7.0",
     "typescript": "^5.0.2"
+  },
+  "dependencies": {
+    "tsc": "^2.0.4"
   }
 }
